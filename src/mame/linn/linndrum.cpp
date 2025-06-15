@@ -674,6 +674,9 @@ void linndrum_audio_device::device_add_mconfig(machine_config &config)
 	m_left_mixer->add_route(0, left_rc, 1.0);
 	m_right_mixer->add_route(0, right_rc, 1.0);
 
+	auto &tmp1 = FILTER_VOLUME(config, "tmp1");
+	m_voice_hpf[0]->add_route(0, tmp1, 1.0);
+
 	SPEAKER(config, m_out, 2).front();
 	// Gain will be set in update_master_volume().
 	left_rc.add_route(0, m_out, 1.0, 0);
