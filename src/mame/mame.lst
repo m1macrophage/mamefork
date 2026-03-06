@@ -48606,6 +48606,9 @@ wavesynth
 @source:virtual/utdsp563xx.cpp
 utdsp563xx
 
+@source:virtual/utpit8253.cpp
+pittest
+
 @source:visual/v100.cpp
 v100
 
