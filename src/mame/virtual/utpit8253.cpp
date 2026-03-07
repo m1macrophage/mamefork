@@ -83,16 +83,33 @@ void pittest_state::pittest(machine_config &config)
 void pittest_state::print_sequence(const std::string &test_name) const
 {
 	LOG("Test: %s\n", test_name.c_str());
+
+	LOG("Index:   | ");
+	int idx = 0;
+	for (const pit_state &s : m_states)
+	{
+		if (!s.clock)
+		{
+			LOG("%2d | ", idx);
+			++idx;
+		}
+	}
+	LOG("\n");
+
 	LOG("Output:  | ");
 	for (const pit_state &s : m_states)
+	{
 		if (!s.clock)
 			LOG("%s | ", s.output ? "HI" : "LO");
+	}
 	LOG("\n");
 
 	LOG("Counter: | ");
 	for (const pit_state &s : m_states)
+	{
 		if (!s.clock)
 			LOG("%02x | ", s.counter);
+	}
 	LOG("\n");
 }
 
@@ -119,7 +136,8 @@ void pittest_state::verify(
 
 TIMER_CALLBACK_MEMBER(pittest_state::verify_deferred)
 {
-	// 'true' validates that no counter or output transitions happen on positive CLK edges.
+	// 'true' validates that no counter or output transitions happen on positive
+	// CLK edges, unless explicitly allowed in `test_data.allowed_output`.
 	constexpr bool CHECK_CLOCK_EDGE = true;
 
 	print_sequence(m_test_data[param].name);
@@ -144,15 +162,15 @@ TIMER_CALLBACK_MEMBER(pittest_state::verify_deferred)
 			{
 				passed = false;
 				out_error = util::string_format(
-					"Output changed on a positive clock edge. State index: %d, expected: %d, actual: %d",
-					i, last_out, m_states[i].output);
+					"Output changed on a positive clock edge at index: %d, expected: %d, actual: %d",
+					j - 1, last_out, m_states[i].output);
 			}
 			if (CHECK_CLOCK_EDGE && last_counter >= 0 && m_states[i].counter != last_counter)
 			{
 				passed = false;
 				counter_error = util::string_format(
-					"Counter changed on a positive clock edge. State index: %d, expected: %d, actual: %d",
-					i, last_counter, m_states[i].counter);
+					"Counter changed on a positive clock edge at index: %d, expected: %d, actual: %d",
+					j - 1, last_counter, m_states[i].counter);
 			}
 		}
 		else
@@ -183,7 +201,7 @@ TIMER_CALLBACK_MEMBER(pittest_state::verify_deferred)
 	{
 		if (j != out.size())
 			fatalerror("pittest_state::verify - `out` is too long.\n");
-		LOG("Passed\n\n");
+		LOG("Passed\n");
 	}
 	else
 	{
@@ -192,8 +210,8 @@ TIMER_CALLBACK_MEMBER(pittest_state::verify_deferred)
 			LOG("- %s\n", out_error.c_str());
 		if (!counter_error.empty())
 			LOG("- %s\n", counter_error.c_str());
-		LOG("\n");
 	}
+	LOG("\n");
 
 	m_states.clear();
 	m_test_data[param].passed = passed;
